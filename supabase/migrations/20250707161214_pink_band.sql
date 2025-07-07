@@ -1,0 +1,5 @@
+-- Insert demo users
+INSERT INTO users (email, password, name, role, department, avatar, enabled, created_at, updated_at) VALUES
+('admin@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Admin User', 'ADMIN', 'IT', 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('manager@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Sarah Johnson', 'MANAGER', 'Sales', 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('employee@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'John Smith', 'EMPLOYEE', 'Marketing', 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
