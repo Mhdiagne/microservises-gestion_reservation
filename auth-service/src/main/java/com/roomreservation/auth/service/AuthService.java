@@ -2,6 +2,7 @@ package com.roomreservation.auth.service;
 
 import com.roomreservation.auth.dto.AuthResponse;
 import com.roomreservation.auth.dto.LoginRequest;
+import com.roomreservation.auth.dto.RegisterRequest;
 import com.roomreservation.auth.entity.User;
 import com.roomreservation.auth.repository.UserRepository;
 import com.roomreservation.auth.util.JwtUtil;
@@ -19,51 +20,88 @@ import java.util.Date;
 
 @Service
 public class AuthService {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     @Autowired
     private AuthenticationManager authenticationManager;
-    
-    public AuthResponse login(LoginRequest loginRequest) {
+
+    public AuthResponse register(RegisterRequest registerRequest) {
+        // Check if user already exists
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new RuntimeException("Email is already registered");
+        }
+
+        // Create new user
+        User user = new User();
+        user.setEmail(registerRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setName(registerRequest.getName());
+        user.setDepartment(registerRequest.getDepartment());
+
+        // Set role (default to EMPLOYEE if not specified or invalid)
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(),
-                    loginRequest.getPassword()
-                )
-            );
-            
-            User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            String token = jwtUtil.generateToken(user.getEmail());
-            Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
-            String expiresAt = expirationDate.toInstant()
+            user.setRole(User.Role.valueOf(registerRequest.getRole().toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            user.setRole(User.Role.EMPLOYEE);
+        }
+
+        // Generate default avatar URL
+        user.setAvatar("https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1");
+
+        // Save user
+        User savedUser = userRepository.save(user);
+
+        // Generate token
+        String token = jwtUtil.generateToken(savedUser.getEmail());
+        Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
+        String expiresAt = expirationDate.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime()
                 .toString();
-            
+
+        return new AuthResponse(token, savedUser, expiresAt);
+    }
+
+    public AuthResponse login(LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            String token = jwtUtil.generateToken(user.getEmail());
+            Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
+            String expiresAt = expirationDate.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+                    .toString();
+
             return new AuthResponse(token, user, expiresAt);
-            
+
         } catch (AuthenticationException e) {
             throw new RuntimeException("Invalid credentials");
         }
     }
-    
+
     public User validateToken(String token) {
         String email = jwtUtil.getEmailFromToken(token);
         return userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
-    
+
     public boolean isTokenValid(String token) {
         try {
             return !jwtUtil.isTokenExpired(token);

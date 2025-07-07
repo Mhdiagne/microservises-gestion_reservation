@@ -26,7 +26,7 @@ eureka:
     prefer-ip-address: true
 
 jwt:
-  secret: mySecretKeyForRoomReservationSystem2024
+  secret: 2b7c3d9fc3f24b689b60ae1736cf9d3702ac4fa34e15d16b8c92fa6de52f6e71
   expiration: 86400000
 
 logging:
