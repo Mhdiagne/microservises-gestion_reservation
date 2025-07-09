@@ -24,28 +24,12 @@ public class ReservationController {
     private ReservationService reservationService;
     
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllReservations(
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) Long roomId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+    public ResponseEntity<Map<String, Object>> getAllReservations() {
         
         try {
             List<Reservation> reservations;
-            
-            if (userId != null) {
-                reservations = reservationService.getReservationsByUserId(userId);
-            } else if (roomId != null) {
-                reservations = reservationService.getReservationsByRoomId(roomId);
-            } else if (status != null) {
-                Reservation.ReservationStatus reservationStatus = Reservation.ReservationStatus.valueOf(status.toUpperCase());
-                reservations = reservationService.getReservationsByStatus(reservationStatus);
-            } else if (startDate != null && endDate != null) {
-                reservations = reservationService.getReservationsByDateRange(startDate, endDate);
-            } else {
-                reservations = reservationService.getAllReservations();
-            }
+
+            reservations = reservationService.getAllReservations();
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -64,7 +48,7 @@ public class ReservationController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getReservationById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getReservationById(@PathVariable("id") Long id) {
         try {
             Optional<Reservation> reservation = reservationService.getReservationById(id);
             

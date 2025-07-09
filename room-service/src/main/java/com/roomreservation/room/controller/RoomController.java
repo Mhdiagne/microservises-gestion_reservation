@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
+
 
 @RestController
 @RequestMapping("/rooms")
@@ -20,72 +22,120 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
     
+//    @GetMapping
+//    public ResponseEntity<Map<String, Object>> getAllRooms(
+//            @RequestParam(required = false) String type,
+//            @RequestParam(required = false) String location,
+//            @RequestParam(required = false) Integer minCapacity,
+//            @RequestParam(required = false) Boolean isAvailable,
+//            @RequestParam(required = false) String search) {
+//
+//        try {
+//            List<Room> rooms;
+//
+//            if (search != null && !search.trim().isEmpty()) {
+//                rooms = roomService.searchRooms(search);
+//            } else if (type != null || location != null || minCapacity != null || isAvailable != null) {
+//                Room.RoomType roomType = type != null ? Room.RoomType.valueOf(type.toUpperCase()) : null;
+//                rooms = roomService.filterRooms(roomType, location, minCapacity, isAvailable);
+//            } else {
+//                rooms = roomService.getAllRooms();
+//            }
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("success", true);
+//            response.put("message", "Rooms retrieved successfully");
+//            response.put("data", rooms);
+//
+//            return ResponseEntity.ok(response);
+//        } catch (Exception e) {
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("success", false);
+//            response.put("message", "Failed to retrieve rooms: " + e.getMessage());
+//            response.put("data", null);
+//
+//            return ResponseEntity.badRequest().body(response);
+//        }
+//    }
+
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllRooms(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) Integer minCapacity,
-            @RequestParam(required = false) Boolean isAvailable,
-            @RequestParam(required = false) String search) {
-        
+    public ResponseEntity<Map<String, Object>> getAllRooms() {
         try {
-            List<Room> rooms;
-            
-            if (search != null && !search.trim().isEmpty()) {
-                rooms = roomService.searchRooms(search);
-            } else if (type != null || location != null || minCapacity != null || isAvailable != null) {
-                Room.RoomType roomType = type != null ? Room.RoomType.valueOf(type.toUpperCase()) : null;
-                rooms = roomService.filterRooms(roomType, location, minCapacity, isAvailable);
-            } else {
-                rooms = roomService.getAllRooms();
-            }
-            
+            List<Room> rooms = roomService.getAllRooms();
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Rooms retrieved successfully");
+            response.put("message", "Salles récupérées avec succès");
             response.put("data", rooms);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Failed to retrieve rooms: " + e.getMessage());
+            response.put("message", "Échec de la récupération des salles : " + e.getMessage());
             response.put("data", null);
-            
-            return ResponseEntity.badRequest().body(response);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
+
+
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Map<String, Object>> getRoomById(@PathVariable Long id) {
+//        try {
+//            Optional<Room> room = roomService.getRoomById(id);
+//
+//            if (room.isPresent()) {
+//                Map<String, Object> response = new HashMap<>();
+//                response.put("success", true);
+//                response.put("message", "Room retrieved successfully");
+//                response.put("data", room.get());
+//
+//                return ResponseEntity.ok(response);
+//            } else {
+//                Map<String, Object> response = new HashMap<>();
+//                response.put("success", false);
+//                response.put("message", "Room not found");
+//                response.put("data", null);
+//
+//                return ResponseEntity.notFound().build();
+//            }
+//        } catch (Exception e) {
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("success", false);
+//            response.put("message", "Failed to retrieve room: " + e.getMessage());
+//            response.put("data", null);
+//
+//            return ResponseEntity.badRequest().body(response);
+//        }
+//    }
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getRoomById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRoomById(@PathVariable("id") Long id) {
+        Map<String, Object> response = new HashMap<>();
+
         try {
-            Optional<Room> room = roomService.getRoomById(id);
-            
-            if (room.isPresent()) {
-                Map<String, Object> response = new HashMap<>();
+            Room room = roomService.getRoomById(id);// Supposé que cette méthode existe dans ton service
+
+            if (room != null) {
                 response.put("success", true);
-                response.put("message", "Room retrieved successfully");
-                response.put("data", room.get());
-                
-                return ResponseEntity.ok(response);
+                response.put("message", "Room found");
+                response.put("data", room);
+                return ResponseEntity.ok(response); // 200 OK
             } else {
-                Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "Room not found");
                 response.put("data", null);
-                
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response); // 404
             }
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Failed to retrieve room: " + e.getMessage());
+            response.put("message", "Error: " + e.getMessage());
             response.put("data", null);
-            
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); // 500
         }
     }
-    
+
+
     @PostMapping
     public ResponseEntity<Map<String, Object>> createRoom(@Valid @RequestBody Room room) {
         try {
