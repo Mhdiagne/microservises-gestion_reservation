@@ -5,6 +5,7 @@ import com.roomreservation.reservation.entity.Reservation;
 import com.roomreservation.reservation.repository.ReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,22 +40,20 @@ public class ReservationService {
     public List<Reservation> getReservationsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return reservationRepository.findByDateRange(startDate, endDate);
     }
-    
+
     public Reservation createReservation(ReservationRequest request) {
-        // Validate time range
-        if (request.getEndTime().isBefore(request.getStartTime()) || 
-            request.getEndTime().isEqual(request.getStartTime())) {
+        if (request.getEndTime().isBefore(request.getStartTime()) ||
+                request.getEndTime().isEqual(request.getStartTime())) {
             throw new RuntimeException("End time must be after start time");
         }
-        
-        // Check for conflicts
+
         List<Reservation> conflicts = reservationRepository.findConflictingReservations(
-            request.getRoomId(), request.getStartTime(), request.getEndTime());
-        
+                request.getRoomId(), request.getStartTime(), request.getEndTime());
+
         if (!conflicts.isEmpty()) {
             throw new RuntimeException("Room is already booked for the selected time slot");
         }
-        
+
         Reservation reservation = new Reservation();
         reservation.setRoomId(request.getRoomId());
         reservation.setUserId(request.getUserId());
@@ -64,10 +63,28 @@ public class ReservationService {
         reservation.setEndTime(request.getEndTime());
         reservation.setAttendees(request.getAttendees());
         reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
-        
-        return reservationRepository.save(reservation);
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        // 🔥 Met à jour la disponibilité de la salle
+        markRoomAsUnavailable(request.getRoomId());
+
+        return saved;
     }
-    
+
+    private void markRoomAsUnavailable(Long roomId) {
+        String roomServiceUrl = "http://localhost:8082/rooms/" + roomId + "/availability?isAvailable=false";
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            restTemplate.patchForObject(roomServiceUrl, null, Void.class);
+        } catch (Exception e) {
+            System.err.println("Erreur mise à jour disponibilité de la salle : " + e.getMessage());
+            // Tu peux logger ou ignorer, selon la criticité
+        }
+    }
+
+
     public Reservation updateReservation(Long id, ReservationRequest request) {
         Reservation reservation = reservationRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Reservation not found with id: " + id));
