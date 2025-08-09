@@ -120,8 +120,8 @@ public class ReservationController {
     }
     
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<Map<String, Object>> cancelReservation(@PathVariable Long id) {
-        try {
+    public ResponseEntity<Map<String, Object>> cancelReservation(@PathVariable("id") Long id) {
+    try {
             Reservation reservation = reservationService.cancelReservation(id);
             
             Map<String, Object> response = new HashMap<>();
