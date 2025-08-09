@@ -24,6 +24,8 @@ public class ReservationRequest {
     private LocalDateTime endTime;
     
     private List<String> attendees;
+
+    private List<Long> equipementIds;
     
     // Constructors
     public ReservationRequest() {}
@@ -57,4 +59,12 @@ public class ReservationRequest {
     
     public List<String> getAttendees() { return attendees; }
     public void setAttendees(List<String> attendees) { this.attendees = attendees; }
+
+    public List<Long> getEquipementIds() {
+        return equipementIds;
+    }
+
+    public void setEquipementIds(List<Long> equipementIds) {
+        this.equipementIds = equipementIds;
+    }
 }

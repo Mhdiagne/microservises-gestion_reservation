@@ -36,13 +36,27 @@ public class Reservation {
     @CollectionTable(name = "reservation_attendees", joinColumns = @JoinColumn(name = "reservation_id"))
     @Column(name = "attendee_email")
     private List<String> attendees;
-    
+
+    @ElementCollection
+    @CollectionTable(name = "reservation_equipements", joinColumns = @JoinColumn(name = "reservation_id"))
+    @Column(name = "equipement_id")
+    private List<Long> equipementIds;
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
+    public List<Long> getEquipementIds() {
+        return equipementIds;
+    }
+
+    public void setEquipementIds(List<Long> equipementIds) {
+        this.equipementIds = equipementIds;
+    }
+
     public enum ReservationStatus {
         CONFIRMED, PENDING, CANCELLED
     }
